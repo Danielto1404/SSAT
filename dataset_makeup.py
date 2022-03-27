@@ -10,6 +10,7 @@ from PIL import Image
 from skimage import io
 import torch.utils.data as data
 
+
 class MakeupDataset(data.Dataset):
     def __init__(self, opts):
         self.opt = opts
@@ -36,7 +37,7 @@ class MakeupDataset(data.Dataset):
             self.dataset_size = self.non_makeup_size * self.makeup_size
 
     def load_img(self, img_path, angle=0):
-        img = io.imread(file_path)
+        img = io.imread(img_path)
         rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
         rotated = self.rotate(rgb, angle)
         return rotated
@@ -61,7 +62,7 @@ class MakeupDataset(data.Dataset):
         if self.opt.phase == 'test_pair':
             non_makeup_index = index // self.makeup_size
             makeup_index = index % self.makeup_size
-            print(self.non_makeup_size, self.makeup_size, non_makeup_index+1, makeup_index+1)
+            print(self.non_makeup_size, self.makeup_size, non_makeup_index + 1, makeup_index + 1)
 
             if np.random.random() > 1:
                 non_makeup_angle = np.random.randint(0, 60) - 30
@@ -70,13 +71,14 @@ class MakeupDataset(data.Dataset):
                 non_makeup_angle = 0
                 makeup_angle = 0
 
-            non_makeup_img = self.load_img(self.non_makeup_path[non_makeup_index],non_makeup_angle)
-            non_makeup_parse = self.load_parse(self.non_makeup_path[non_makeup_index].replace('images', 'seg1'),non_makeup_angle)
+            non_makeup_img = self.load_img(self.non_makeup_path[non_makeup_index], non_makeup_angle)
+            non_makeup_parse = self.load_parse(self.non_makeup_path[non_makeup_index].replace('images', 'seg1'),
+                                               non_makeup_angle)
 
-            makeup_img = self.load_img(self.makeup_path[makeup_index],makeup_angle)
-            makeup_parse = self.load_parse(self.makeup_path[makeup_index].replace('images', 'seg1'),makeup_angle)
+            makeup_img = self.load_img(self.makeup_path[makeup_index], makeup_angle)
+            makeup_parse = self.load_parse(self.makeup_path[makeup_index].replace('images', 'seg1'), makeup_angle)
 
-            data = self.test_preprocessing(self.opt,non_makeup_img,makeup_img,non_makeup_parse,makeup_parse)
+            data = self.test_preprocessing(self.opt, non_makeup_img, makeup_img, non_makeup_parse, makeup_parse)
             non_makeup_img = data['non_makeup']
             makeup_img = data['makeup']
             non_makeup_parse = data['non_makeup_parse']
@@ -89,14 +91,13 @@ class MakeupDataset(data.Dataset):
             non_makeup_parse = np.clip(non_makeup_parse, a_min=0, a_max=1)
             makeup_parse = np.clip(makeup_parse, a_min=0, a_max=1)
 
-
             data = {'non_makeup': torch.from_numpy(non_makeup_img).type(torch.FloatTensor),
                     'makeup': torch.from_numpy(makeup_img).type(torch.FloatTensor),
                     'non_makeup_parse': torch.from_numpy(non_makeup_parse).type(torch.FloatTensor),
                     'makeup_parse': torch.from_numpy(makeup_parse).type(torch.FloatTensor)}
             return data
 
-    def test_preprocessing(self, opts, non_makeup_img, makeup_img,non_makeup_parse,makeup_parse):
+    def test_preprocessing(self, opts, non_makeup_img, makeup_img, non_makeup_parse, makeup_parse):
         non_makeup_img = cv2.resize(non_makeup_img, (opts.resize_size, opts.resize_size))
         makeup_img = cv2.resize(makeup_img, (opts.resize_size, opts.resize_size))
         non_makeup_parse = cv2.resize(non_makeup_parse, (opts.resize_size, opts.resize_size),
@@ -124,4 +125,3 @@ class MakeupDataset(data.Dataset):
         mask = np.expand_dims(mask, axis=2)
         mask = np.concatenate((mask, mask, mask), axis=2)
         return mask
-
