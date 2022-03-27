@@ -36,9 +36,9 @@ class MakeupDataset(data.Dataset):
 
     def load_img(self, img_path, angle=0):
         img = cv2.imread(img_path)
-        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-        img = self.rotate(img, angle)
-        return img
+        rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        rotated = self.rotate(rgb, angle)
+        return rotated
 
     def load_parse(self, parse, angle=0):
         parse = cv2.imread(parse, cv2.IMREAD_GRAYSCALE)
