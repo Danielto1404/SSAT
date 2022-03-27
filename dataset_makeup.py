@@ -36,8 +36,7 @@ class MakeupDataset(data.Dataset):
             self.dataset_size = self.non_makeup_size * self.makeup_size
 
     def BGR2RGB(self, image):
-        print(image)
-        return cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        return cv2.cvtColor(image[:, :, :], cv2.COLOR_BGR2RGB)
 
     def load_img(self, img_path, angle=0):
         img = cv2.imread(img_path)
