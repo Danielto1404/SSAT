@@ -7,6 +7,7 @@ import cv2
 import torch
 import numpy as np
 from PIL import Image
+from skimage import io
 import torch.utils.data as data
 
 class MakeupDataset(data.Dataset):
@@ -35,7 +36,7 @@ class MakeupDataset(data.Dataset):
             self.dataset_size = self.non_makeup_size * self.makeup_size
 
     def load_img(self, img_path, angle=0):
-        img = cv2.imread(img_path)
+        img = io.imread(file_path)
         rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
         rotated = self.rotate(rgb, angle)
         return rotated
