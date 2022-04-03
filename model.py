@@ -139,7 +139,7 @@ class MakeupGAN(nn.Module):
             [
                 images_non_makeup[0:1, ::],
                 images_makeup[0:1, ::],
-                makeup_down_warp[0:1, ::],
+                # makeup_down_warp[0:1, ::],
                 # makeup_down[0:1, ::],
                 makeup_warp[0:1, ::],
                 images_z_transfer[0:1, ::]
