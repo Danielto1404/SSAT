@@ -22,6 +22,7 @@ class MakeupDataset(data.Dataset):
         self.non_makeup_path = [os.path.join(self.dataroot, 'non-makeup', x) for x in name_non_makeup]
 
         # makeup
+        name_makeup = os.listdir(os.path.join(self.dataroot, 'makeup'))
         name_makeup = list(filter(lambda name: name[0] != '.', name_makeup))
         self.makeup_path = [os.path.join(self.dataroot, 'makeup', x) for x in name_makeup]
 
