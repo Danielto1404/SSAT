@@ -18,10 +18,11 @@ class MakeupDataset(data.Dataset):
 
         # non_makeup
         name_non_makeup = os.listdir(os.path.join(self.dataroot, 'non-makeup'))
+        name_non_makeup = list(filter(lambda name: name[0] != '.', name_non_makeup))
         self.non_makeup_path = [os.path.join(self.dataroot, 'non-makeup', x) for x in name_non_makeup]
 
         # makeup
-        name_makeup = os.listdir(os.path.join(self.dataroot, 'makeup'))
+        name_makeup = list(filter(lambda name: name[0] != '.', name_makeup))
         self.makeup_path = [os.path.join(self.dataroot, 'makeup', x) for x in name_makeup]
 
         self.warproot = os.path.join(self.dataroot, 'warp')
