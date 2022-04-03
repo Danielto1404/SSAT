@@ -2,11 +2,12 @@
 # -*- coding:utf-8 -*-
 # Author: Zhaoyang Sun
 
-import networks
-from networks import init_net
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+
+import networks
+from networks import init_net
 
 
 class MakeupGAN(nn.Module):
@@ -31,7 +32,6 @@ class MakeupGAN(nn.Module):
         # generator
         self.gen = init_net(networks.Decoder(opts.output_dim), opts.gpu, init_type='normal', gain=0.02)
 
-
     def forward(self):
         # first transfer and removal
         self.z_non_makeup_c = self.enc_content(self.non_makeup)
@@ -42,12 +42,14 @@ class MakeupGAN(nn.Module):
         self.z_makeup_s = self.enc_semantic(self.makeup_parse)
         self.z_makeup_a = self.enc_makeup(self.makeup)
         # warp makeup style
-        self.mapX, self.mapY, self.z_non_makeup_a_warp, self.z_makeup_a_warp = self.transformer(self.z_non_makeup_c,
-                                                                                                self.z_makeup_c,
-                                                                                                self.z_non_makeup_s,
-                                                                                                self.z_makeup_s,
-                                                                                                self.z_non_makeup_a,
-                                                                                                self.z_makeup_a)
+        self.mapX, self.mapY, self.z_non_makeup_a_warp, self.z_makeup_a_warp = self.transformer(
+            self.z_non_makeup_c,
+            self.z_makeup_c,
+            self.z_non_makeup_s,
+            self.z_makeup_s,
+            self.z_non_makeup_a,
+            self.z_makeup_a
+        )
         # makeup transfer and removal
         self.z_transfer = self.gen(self.z_non_makeup_c, self.z_makeup_a_warp)
         self.z_removal = self.gen(self.z_makeup_c, self.z_non_makeup_a_warp)
@@ -65,12 +67,14 @@ class MakeupGAN(nn.Module):
         # self.z_makeup_s = self.enc_semantic(self.makeup_parse)
         self.z_removal_a = self.enc_makeup(self.z_removal)
         # warp makeup style
-        self.mapX2, self.mapY2, self.z_transfer_a_warp, self.z_removal_a_warp = self.transformer(self.z_transfer_c,
-                                                                                                 self.z_removal_c,
-                                                                                                 self.z_non_makeup_s,
-                                                                                                 self.z_makeup_s,
-                                                                                                 self.z_transfer_a,
-                                                                                                 self.z_removal_a)
+        self.mapX2, self.mapY2, self.z_transfer_a_warp, self.z_removal_a_warp = self.transformer(
+            self.z_transfer_c,
+            self.z_removal_c,
+            self.z_non_makeup_s,
+            self.z_makeup_s,
+            self.z_transfer_a,
+            self.z_removal_a
+        )
         # makeup transfer and removal
         self.z_cycle_non_makeup = self.gen(self.z_transfer_c, self.z_removal_a_warp)
         self.z_cycle_makeup = self.gen(self.z_removal_c, self.z_transfer_a_warp)
@@ -84,7 +88,6 @@ class MakeupGAN(nn.Module):
         self.transformer.load_state_dict(checkpoint['enc_trans'])
         self.gen.load_state_dict(checkpoint['gen'])
         return checkpoint['ep'], checkpoint['total_it']
-
 
     def normalize_image(self, x):
         return x[:, 0:3, :, :]
@@ -104,12 +107,14 @@ class MakeupGAN(nn.Module):
             self.z_makeup_s = self.enc_semantic(self.makeup_parse)
             self.z_makeup_a = self.enc_makeup(self.makeup)
             # warp makeup style
-            self.mapX, self.mapY, self.z_non_makeup_a_warp, self.z_makeup_a_warp = self.transformer(self.z_non_makeup_c,
-                                                                                                    self.z_makeup_c,
-                                                                                                    self.z_non_makeup_s,
-                                                                                                    self.z_makeup_s,
-                                                                                                    self.z_non_makeup_a,
-                                                                                                    self.z_makeup_a)
+            self.mapX, self.mapY, self.z_non_makeup_a_warp, self.z_makeup_a_warp = self.transformer(
+                self.z_non_makeup_c,
+                self.z_makeup_c,
+                self.z_non_makeup_s,
+                self.z_makeup_s,
+                self.z_non_makeup_a,
+                self.z_makeup_a
+            )
             # makeup transfer and removal
             self.z_transfer = self.gen(self.z_non_makeup_c, self.z_makeup_a_warp)
             self.z_removal = self.gen(self.z_makeup_c, self.z_non_makeup_a_warp)
@@ -118,17 +123,26 @@ class MakeupGAN(nn.Module):
         n, c, h, w = non_makeup_down.shape
         non_makeup_down_warp = torch.bmm(non_makeup_down.view(n, c, h * w), self.mapY)  # n*HW*1
         non_makeup_down_warp = non_makeup_down_warp.view(n, c, h, w)
-        non_makeup_warp = F.interpolate(non_makeup_down_warp, scale_factor=4)
+        F.interpolate(non_makeup_down_warp, scale_factor=4)
 
         makeup_down = self.normalize_image(F.interpolate(self.makeup, scale_factor=0.25, mode='nearest'))
         n, c, h, w = makeup_down.shape
-        makeup_down_warp = torch.bmm(makeup_down.view(n, c, h * w), self.mapX)  # n*HW*1
+        makeup_down_warp = torch.bmm(makeup_down.view(n, c, h * w), self.mapX)  # n * H * W * 1
         makeup_down_warp = makeup_down_warp.view(n, c, h, w)
         makeup_warp = F.interpolate(makeup_down_warp, scale_factor=4)
 
         images_non_makeup = self.normalize_image(self.non_makeup).detach()
         images_makeup = self.normalize_image(self.makeup).detach()
         images_z_transfer = self.normalize_image(self.z_transfer).detach()
-        row1 = torch.cat((images_non_makeup[0:1, ::],images_makeup[0:1, ::], makeup_warp[0:1, ::], images_z_transfer[0:1, ::]), 3)
-        return row1
 
+        row1 = torch.cat(
+            [
+                images_non_makeup[0:1, ::],
+                images_makeup[0:1, ::],
+                makeup_down_warp[0:1, ::],
+                makeup_down[0:1, ::],
+                makeup_warp[0:1, ::],
+                images_z_transfer[0:1, ::]
+            ],
+            3)
+        return row1
